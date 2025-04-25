@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAPTCHA Verification</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin: 50px; }
+        #instructions { margin-bottom: 20px; }
+        #puzzle-container { display: flex; justify-content: center; margin-top: 20px; }
+        .drop-zone, .shape-zone { border: 2px dashed #ccc; width: 100px; height: 100px; margin: 5px; display: inline-block; }
+        .draggable { width: 100px; height: 100px; margin: 5px; cursor: grab; }
+        .shape { width: 100px; height: 100px; background-color: #ccc; }
+        #controls { margin-top: 20px; }
+        button { margin: 10px; padding: 10px 20px; }
+    </style>
+</head>
+<body>
+    <h1>Complete the CAPTCHA</h1>
+    <!-- <div id="instructions"></div>
+    <div id="puzzle-container"></div>
+    <div id="controls">
+        <button onclick="regeneratePuzzle()">Regenerate Puzzle</button>
+        <button onclick="switchPuzzle()">Switch Puzzle Type</button>
+        <button onclick="submitCaptcha()">Submit</button>
+    </div>
+
+    <script>
+        let puzzles = [
+            {
+                type: 'drag',
+                pieces: ['A', 'B', 'C'],
+                solution: ['B', 'A', 'C'],
+                instructions: 'Drag the letters to match the order: B, A, C.'
+            },
+            {
+                type: 'drag',
+                pieces: ['1', '2', '3'],
+                solution: ['2', '3', '1'],
+                instructions: 'Drag the numbers to match the order: 2, 3, 1.'
+            },
+            {
+                type: 'shape',
+                shapes: ['circle', 'square', 'triangle'],
+                solution: ['circle', 'square', 'triangle'],
+                instructions: 'Match each shape to its outline.'
+            }
+        ];
+
+        localStorage.setItem('puzzles', JSON.stringify(puzzles));
+        let currentPuzzleIndex = 0;
+        let startTime, cursorMovements = 0;
+
+        function loadPuzzle(index) {
+            const puzzle = JSON.parse(localStorage.getItem('puzzles'))[index];
+            const container = document.getElementById('puzzle-container');
+            const instructions = document.getElementById('instructions');
+            container.innerHTML = '';
+            instructions.textContent = puzzle.instructions;
+
+            if (puzzle.type === 'drag') {
+                // Create drag pieces
+                puzzle.pieces.forEach((piece, idx) => {
+                    const div = document.createElement('div');
+                    div.classList.add('draggable');
+                    div.draggable = true;
+                    div.textContent = piece;
+                    div.setAttribute('data-index', idx);
+                    div.ondragstart = dragStart;
+                    container.appendChild(div);
+                });
+
+                // Create drop zones
+                puzzle.solution.forEach(() => {
+                    const dropZone = document.createElement('div');
+                    dropZone.classList.add('drop-zone');
+                    dropZone.ondragover = dragOver;
+                    dropZone.ondrop = drop;
+                    container.appendChild(dropZone);
+                });
+            } else if (puzzle.type === 'shape') {
+                // Create shapes
+                puzzle.shapes.forEach(shape => {
+                    const div = document.createElement('div');
+                    div.classList.add('shape');
+                    div.textContent = shape;
+                    div.setAttribute('data-shape', shape);
+                    div.draggable = true;
+                    div.ondragstart = dragStart;
+                    container.appendChild(div);
+                });
+
+                // Create shape zones
+                puzzle.solution.forEach(shape => {
+                    const shapeZone = document.createElement('div');
+                    shapeZone.classList.add('shape-zone');
+                    shapeZone.setAttribute('data-shape', shape);
+                    shapeZone.ondragover = dragOver;
+                    shapeZone.ondrop = dropShape;
+                    container.appendChild(shapeZone);
+                });
+            }
+
+            // Start timing and reset cursor movements
+            startTime = Date.now();
+            cursorMovements = 0;
+        }
+
+        function regeneratePuzzle() {
+            loadPuzzle(currentPuzzleIndex);
+        }
+
+        function switchPuzzle() {
+            currentPuzzleIndex = (currentPuzzleIndex + 1) % puzzles.length;
+            regeneratePuzzle();
+        }
+
+        function submitCaptcha() {
+            const puzzle = JSON.parse(localStorage.getItem('puzzles'))[currentPuzzleIndex];
+            const dropZones = document.querySelectorAll('.drop-zone, .shape-zone');
+            const result = Array.from(dropZones).map(zone => zone.textContent || zone.getAttribute('data-shape'));
+
+            const timeTaken = (Date.now() - startTime) / 1000;
+            if (JSON.stringify(result) === JSON.stringify(puzzle.solution)) {
+                if (timeTaken < 2 || cursorMovements < 10) {
+                    alert('Bot detected! Try again.');
+                } else {
+                    alert('CAPTCHA Passed!');
+                    const targetPage = localStorage.getItem('targetPage');
+                    window.location.href = targetPage;
+                }
+            } else {
+                alert('CAPTCHA Failed. Try again.');
+            }
+        }
+
+        function dragStart(event) {
+            event.dataTransfer.setData('text', event.target.getAttribute('data-shape') || event.target.dataset.index);
+        }
+
+        function dragOver(event) {
+            event.preventDefault();
+            cursorMovements++;
+        }
+
+        function drop(event) {
+            event.preventDefault();
+            const index = event.dataTransfer.getData('text');
+            event.target.textContent = puzzles[currentPuzzleIndex].pieces[index];
+        }
+
+        function dropShape(event) {
+            event.preventDefault();
+            const shape = event.dataTransfer.getData('text');
+            if (event.target.getAttribute('data-shape') === shape) {
+                event.target.textContent = shape;
+                event.target.style.backgroundColor = 'lightgreen';
+            }
+        }
+
+        // Load the first puzzle on page load
+        window.onload = () => loadPuzzle(currentPuzzleIndex);
+    </script> -->
+    <div id="instructions"></div>
+<div id="puzzle-container"></div>
+<div id="controls">
+    <button onclick="regeneratePuzzle()">Regenerate Puzzle</button>
+    <button onclick="switchPuzzle()">Switch Puzzle Type</button>
+    <button onclick="submitCaptcha()">Submit</button>
+    <button id="simulate-bot">Simulate Bot Solving</button>
+
+</div>
+
+<script>
+    let puzzles = [
+        {
+            type: 'drag',
+            pieces: ['A', 'B', 'C'],
+            solution: ['B', 'A', 'C'],
+            instructions: 'Drag the letters to match the order: B, A, C.'
+        },
+        {
+            type: 'shape',
+            shapes: ['circle', 'square', 'triangle'],
+            solution: ['circle', 'square', 'triangle'],
+            instructions: 'Match each shape to its outlined placeholder.'
+        },
+        {
+            type: 'color',
+            colors: ['red', 'blue', 'green'],
+            solution: ['green', 'blue', 'red'],
+            instructions: 'Drag the colored boxes to match the order: green, blue, red.'
+        },
+        {
+            type: 'number',
+            numbers: ['1', '2', '3'],
+            solution: ['3', '1', '2'],
+            instructions: 'Drag the numbers to match the order: 3, 1, 2.'
+        }
+    ];
+
+    let currentPuzzleIndex = 0;
+    let startTime, cursorMovements = 0, interactionLog = [];
+
+    function loadPuzzle(index) {
+        const puzzle = puzzles[index];
+        const container = document.getElementById('puzzle-container');
+        const instructions = document.getElementById('instructions');
+        container.innerHTML = '';
+        instructions.textContent = puzzle.instructions;
+
+        if (puzzle.type === 'drag' || puzzle.type === 'number') {
+            puzzle.pieces = puzzle.type === 'drag' ? puzzle.pieces : puzzle.numbers;
+            puzzle.pieces.forEach((piece, idx) => {
+                const div = document.createElement('div');
+                div.classList.add('draggable');
+                div.draggable = true;
+                div.textContent = piece;
+                div.setAttribute('data-index', idx);
+                div.ondragstart = dragStart;
+                container.appendChild(div);
+            });
+
+            puzzle.solution.forEach(() => {
+                const dropZone = document.createElement('div');
+                dropZone.classList.add('drop-zone');
+                dropZone.ondragover = dragOver;
+                dropZone.ondrop = drop;
+                container.appendChild(dropZone);
+            });
+        } else if (puzzle.type === 'shape') {
+            puzzle.shapes.forEach(shape => {
+                const shapeDiv = document.createElement('div');
+                shapeDiv.classList.add('draggable');
+                shapeDiv.draggable = true;
+                shapeDiv.setAttribute('data-shape', shape);
+                shapeDiv.style.width = '100px';
+                shapeDiv.style.height = '100px';
+                shapeDiv.style.margin = '10px';
+
+                if (shape === 'circle') {
+                    shapeDiv.style.backgroundColor = 'red';
+                    shapeDiv.style.borderRadius = '50%';
+                } else if (shape === 'square') {
+                    shapeDiv.style.backgroundColor = 'blue';
+                } else if (shape === 'triangle') {
+                    shapeDiv.style.backgroundColor = 'transparent';
+                    shapeDiv.style.borderLeft = '50px solid transparent';
+                    shapeDiv.style.borderRight = '50px solid transparent';
+                    shapeDiv.style.borderBottom = '100px solid green';
+                    shapeDiv.style.width = '0';
+                    shapeDiv.style.height = '0';
+                }
+
+                shapeDiv.ondragstart = dragStart;
+                container.appendChild(shapeDiv);
+            });
+
+            puzzle.solution.forEach(shape => {
+                const outline = document.createElement('div');
+                outline.classList.add('shape-zone');
+                outline.setAttribute('data-shape', shape);
+                outline.style.border = '2px dashed black';
+                outline.style.margin = '10px';
+                outline.style.display = 'inline-block';
+
+                if (shape === 'circle') {
+                    outline.style.width = '100px';
+                    outline.style.height = '100px';
+                    outline.style.borderRadius = '50%';
+                } else if (shape === 'square') {
+                    outline.style.width = '100px';
+                    outline.style.height = '100px';
+                } else if (shape === 'triangle') {
+                    outline.style.borderLeft = '50px solid transparent';
+                    outline.style.borderRight = '50px solid transparent';
+                    outline.style.borderBottom = '100px dashed black';
+                    outline.style.width = '0';
+                    outline.style.height = '0';
+                }
+
+                outline.ondragover = dragOver;
+                outline.ondrop = dropShape;
+                container.appendChild(outline);
+            });
+        } else if (puzzle.type === 'color') {
+            puzzle.colors.forEach((color, idx) => {
+                const colorBox = document.createElement('div');
+                colorBox.classList.add('draggable');
+                colorBox.draggable = true;
+                colorBox.style.backgroundColor = color;
+                colorBox.style.width = '50px';
+                colorBox.style.height = '50px';
+                colorBox.style.margin = '10px';
+                colorBox.setAttribute('data-color', color);
+                colorBox.ondragstart = dragStartColor;
+                container.appendChild(colorBox);
+            });
+            puzzle.solution.forEach(() => {
+                const colorDropZone = document.createElement('div');
+                colorDropZone.classList.add('drop-zone');
+                colorDropZone.style.width = '50px';
+                colorDropZone.style.height = '50px';
+                colorDropZone.style.border = '2px dashed black';
+                colorDropZone.style.margin = '10px';
+                colorDropZone.setAttribute('data-expected-color', '');
+                colorDropZone.ondragover = dragOver;
+                colorDropZone.ondrop = dropColor;
+                container.appendChild(colorDropZone);
+            });
+        }
+
+        startTime = Date.now();
+        cursorMovements = 0;
+        interactionLog = [];
+    }
+
+    function regeneratePuzzle() {
+        loadPuzzle(currentPuzzleIndex);
+    }
+
+    function switchPuzzle() {
+        currentPuzzleIndex = (currentPuzzleIndex + 1) % puzzles.length;
+        regeneratePuzzle();
+    }
+
+    // function submitCaptcha() {
+    //     const puzzle = puzzles[currentPuzzleIndex];
+    //     const dropZones = document.querySelectorAll('.drop-zone, .shape-zone');
+    //     const result = Array.from(dropZones).map(zone => zone.textContent || zone.getAttribute('data-shape'));
+
+    //     const timeTaken = (Date.now() - startTime) / 1000;
+    //     const interactionPattern = new Set(interactionLog).size;
+
+    //     if (JSON.stringify(result) === JSON.stringify(puzzle.solution)) {
+    //         if (timeTaken < 2 || cursorMovements < 10 || interactionPattern < 3) {
+    //             alert('Bot detected! Try again.');
+    //         } else {
+    //             alert('CAPTCHA Passed!');
+    //             const targetPage = localStorage.getItem('targetPage');
+    //             window.location.href = targetPage;
+    //         }
+    //     } else {
+    //         alert('CAPTCHA Failed. Try again.');
+    //     }
+    // }
+
+    function submitCaptcha() {
+    const puzzle = puzzles[currentPuzzleIndex];
+    const dropZones = document.querySelectorAll('.drop-zone, .shape-zone');
+    const result = Array.from(dropZones).map(zone => {
+        if (puzzle.type === 'color') {
+            return zone.getAttribute('data-expected-color');
+        } else if (puzzle.type === 'shape') {
+            return zone.textContent || zone.getAttribute('data-shape');
+        } else {
+            return zone.textContent;
+        }
+    });
+
+    const timeTaken = (Date.now() - startTime) / 1000;
+    const interactionPattern = new Set(interactionLog).size;
+
+    if (JSON.stringify(result) === JSON.stringify(puzzle.solution)) {
+        if (timeTaken < 2 || cursorMovements < 10 || interactionPattern < 3) {
+            alert('Bot detected! Try again.');
+        } else {
+            alert('CAPTCHA Passed!');
+            const targetPage = localStorage.getItem('targetPage');
+            window.location.href = targetPage;
+        }
+    } else {
+        alert('CAPTCHA Failed. Please try again.');
+    }
+}
+
+function simulateBotSolvingCaptcha() {
+    const puzzle = puzzles[currentPuzzleIndex];
+    const dropZones = document.querySelectorAll('.drop-zone, .shape-zone');
+    const draggableItems = document.querySelectorAll('.draggable');
+
+    if (puzzle.type === 'drag' || puzzle.type === 'number') {
+        // Solve drag-and-drop or number puzzles
+        puzzle.solution.forEach((solution, index) => {
+            const dropZone = dropZones[index];
+            const item = Array.from(draggableItems).find(
+                item => item.textContent === solution
+            );
+            if (item) {
+                dropZone.textContent = solution;
+                dropZone.setAttribute('data-dropped', solution);
+            }
+        });
+    } else if (puzzle.type === 'shape') {
+        // Solve shape-matching puzzles
+        puzzle.solution.forEach((solution, index) => {
+            const shapeZone = dropZones[index];
+            const shapeItem = Array.from(draggableItems).find(
+                item => item.getAttribute('data-shape') === solution
+            );
+            if (shapeItem) {
+                shapeZone.setAttribute('data-shape', solution);
+                shapeZone.style.backgroundColor = shapeItem.style.backgroundColor;
+            }
+        });
+    } else if (puzzle.type === 'color') {
+        // Solve color-matching puzzles
+        puzzle.solution.forEach((color, index) => {
+            const dropZone = dropZones[index];
+            const colorBox = Array.from(draggableItems).find(
+                item => item.getAttribute('data-color') === color
+            );
+            if (colorBox) {
+                dropZone.style.backgroundColor = color;
+                dropZone.setAttribute('data-expected-color', color);
+            }
+        });
+    }
+
+    // Simulate rapid bot-like behavior
+    cursorMovements = 1; // Minimal cursor movements
+    interactionLog = ['bot-test']; // Log minimal interaction
+    startTime = Date.now() - 500; // Simulated solving in 0.5 seconds
+
+    // Automatically submit the solution
+    setTimeout(() => {
+        submitCaptcha();
+    }, 500); // Submit after a short delay
+}
+
+// Attach bot-solving function to the button
+document.getElementById('simulate-bot').addEventListener('click', simulateBotSolvingCaptcha);
+
+    function dragStart(event) {
+        event.dataTransfer.setData('text', event.target.getAttribute('data-shape') || event.target.dataset.index);
+        interactionLog.push(event.target.textContent || event.target.getAttribute('data-shape'));
+    }
+
+    function dragStartColor(event) {
+        event.dataTransfer.setData('color', event.target.getAttribute('data-color'));
+        interactionLog.push(event.target.getAttribute('data-color'));
+    }
+
+    function dragOver(event) {
+        event.preventDefault();
+        cursorMovements++;
+    }
+    function dropColor(event) {
+        event.preventDefault();
+        const color = event.dataTransfer.getData('color');
+        event.target.style.backgroundColor = color;
+        event.target.setAttribute('data-expected-color', color);
+    }
+
+    function drop(event) {
+        event.preventDefault();
+        const index = event.dataTransfer.getData('text');
+        event.target.textContent = puzzles[currentPuzzleIndex].pieces[index];
+    }
+
+    function dropShape(event) {
+        event.preventDefault();
+        const shape = event.dataTransfer.getData('text');
+        if (event.target.getAttribute('data-shape') === shape) {
+            event.target.style.backgroundColor = 'lightgreen';
+            event.target.textContent = shape;
+        }
+    }
+
+    // Load the first puzzle on page load
+    window.onload = () => loadPuzzle(currentPuzzleIndex);
+</script>
+
+
+</body>
+</html>
