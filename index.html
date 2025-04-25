@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced CAPTCHA System</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f7f9fc;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+            margin-bottom: 30px;
+        }
+        header h1 {
+            margin: 0;
+            font-weight: 300;
+        }
+        .content-area {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        .captcha-container {
+            display: none;
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .puzzle-area {
+            margin: 20px auto;
+            width: 400px;
+            height: 300px;
+            border: 2px solid #ddd;
+            position: relative;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .puzzle-title {
+            margin-bottom: 15px;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+        .puzzle-instructions {
+            margin-bottom: 20px;
+            color: #555;
+        }
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        .button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .primary-btn {
+            background-color: #3498db;
+            color: white;
+        }
+        .primary-btn:hover {
+            background-color: #2980b9;
+        }
+        .secondary-btn {
+            background-color: #95a5a6;
+            color: white;
+        }
+        .secondary-btn:hover {
+            background-color: #7f8c8d;
+        }
+        .danger-btn {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .danger-btn:hover {
+            background-color: #c0392b;
+        }
+        .success-btn {
+            background-color: #2ecc71;
+            color: white;
+        }
+        .success-btn:hover {
+            background-color: #27ae60;
+        }
+        .timer {
+            font-size: 1.2em;
+            margin: 10px 0;
+            color: #555;
+        }
+        .result-message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+        .draggable {
+            position: absolute;
+            cursor: move;
+            user-select: none;
+            z-index: 10;
+        }
+        .drop-zone {
+            position: absolute;
+            border: 2px dashed #ccc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #999;
+            font-weight: bold;
+        }
+        .item-matched {
+            border: 2px solid #2ecc71;
+        }
+        .loading-animation {
+            margin: 20px auto;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .protected-link {
+            display: inline-block;
+            margin: 10px;
+            padding: 10px 15px;
+            background-color: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        .protected-link:hover {
+            background-color: #2980b9;
+        }
+        .cursor-trail {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: rgba(52, 152, 219, 0.5);
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Enhanced CAPTCHA System</h1>
+        </header>
+
+        <!-- Main content -->
+        <div class="content-area">
+            <h2>Welcome to our secure website</h2>
+            <p>This demonstrates a game-based CAPTCHA system that differentiates between humans and bots using interactive puzzles.</p>
+            
+            <h3>Try accessing these protected links:</h3>
+            <a href="#" class="protected-link" data-page="dashboard">Dashboard</a>
+            <a href="#" class="protected-link" data-page="account">Account Settings</a>
+            <a href="#" class="protected-link" data-page="reports">Reports</a>
+        </div>
+
+        <!-- CAPTCHA area -->
+        <div class="captcha-container" id="captcha-screen">
+            <h2>Please Complete the CAPTCHA</h2>
+            <p>To continue to <span id="destination-page">the page</span>, please solve the puzzle below:</p>
+            
+            <div class="timer" id="timer">Time: 0.0s</div>
+            
+            <div class="puzzle-title" id="puzzle-title">Shape Matching Puzzle</div>
+            <div class="puzzle-instructions" id="puzzle-instructions">Drag the shapes to their matching outlines.</div>
+            
+            <div class="puzzle-area" id="puzzle-area">
+                <!-- Puzzle elements will be added dynamically -->
+            </div>
+            
+            <div class="controls">
+                <button class="button primary-btn" id="submit-btn">Submit</button>
+                <button class="button secondary-btn" id="switch-puzzle-btn">Switch Puzzle</button>
+                <button class="button danger-btn" id="simulate-bot-btn">Simulate Bot</button>
+                <button class="button secondary-btn" id="retry-btn">Retry</button>
+            </div>
+            
+            <div class="loading-animation" id="loading"></div>
+            
+            <div class="result-message" id="result-message"></div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let startTime = 0;
+        let timerInterval;
+        let currentPuzzle = 0;
+        let targetPage = '';
+        let mouseMovements = [];
+        let solveSpeed = 0;
+        let correctSolution = false;
+
+        // Store the puzzles in an array
+        const puzzles = [
+            {
+                type: 'shape-matching',
+                title: 'Shape Matching Puzzle',
+                instructions: 'Drag the shapes to their matching outlines.',
+                shapes: [
+                    { type: 'circle', color: '#e74c3c' },
+                    { type: 'square', color: '#3498db' },
+                    { type: 'triangle', color: '#2ecc71' }
+                ]
+            },
+            {
+                type: 'number-ordering',
+                title: 'Number Ordering Puzzle',
+                instructions: 'Drag the numbers in ascending order (1-5).',
+                numbers: [5, 3, 1, 4, 2]
+            },
+            {
+                type: 'color-matching',
+                title: 'Color Matching Puzzle',
+                instructions: 'Match the colored squares to their names.',
+                colors: [
+                    { name: 'Red', hex: '#e74c3c' },
+                    { name: 'Blue', hex: '#3498db' },
+                    { name: 'Green', hex: '#2ecc71' },
+                    { name: 'Yellow', hex: '#f1c40f' }
+                ]
+            },
+            {
+                type: 'image-pieces',
+                title: 'Image Assembly Puzzle',
+                instructions: 'Drag the image pieces to recreate the picture.',
+                pieces: 4
+            },
+            {
+                type: 'word-scramble',
+                title: 'Word Unscramble Puzzle',
+                instructions: 'Arrange the letters to form the word "SECURE".',
+                word: 'SECURE',
+                scrambled: ['E', 'S', 'C', 'U', 'R', 'E']
+            }
+        ];
+
+        // Add event listeners to protected links
+        document.querySelectorAll('.protected-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                targetPage = this.getAttribute('data-page');
+                document.getElementById('destination-page').textContent = targetPage;
+                document.querySelector('.content-area').style.display = 'none';
+                document.getElementById('captcha-screen').style.display = 'block';
+                
+                // Load random puzzle
+                currentPuzzle = Math.floor(Math.random() * puzzles.length);
+                loadPuzzle(currentPuzzle);
+                
+                // Start timer
+                startTime = Date.now();
+                timerInterval = setInterval(updateTimer, 100);
+                
+                // Reset mouse movements tracking
+                mouseMovements = [];
+            });
+        });
+
+        // Update timer function
+        function updateTimer() {
+            const elapsed = (Date.now() - startTime) / 1000;
+            document.getElementById('timer').textContent = `Time: ${elapsed.toFixed(1)}s`;
+        }
+
+        // Load a puzzle by index
+        function loadPuzzle(index) {
+            const puzzle = puzzles[index];
+            const puzzleArea = document.getElementById('puzzle-area');
+            
+            // Update title and instructions
+            document.getElementById('puzzle-title').textContent = puzzle.title;
+            document.getElementById('puzzle-instructions').textContent = puzzle.instructions;
+            
+            // Clear previous puzzle
+            puzzleArea.innerHTML = '';
+            
+            // Load the selected puzzle
+            switch (puzzle.type) {
+                case 'shape-matching':
+                    loadShapeMatchingPuzzle(puzzle, puzzleArea);
+                    break;
+                case 'number-ordering':
+                    loadNumberOrderingPuzzle(puzzle, puzzleArea);
+                    break;
+                case 'color-matching':
+                    loadColorMatchingPuzzle(puzzle, puzzleArea);
+                    break;
+                case 'image-pieces':
+                    loadImagePiecesPuzzle(puzzle, puzzleArea);
+                    break;
+                case 'word-scramble':
+                    loadWordScramblePuzzle(puzzle, puzzleArea);
+                    break;
+            }
+            
+            // Setup drag and drop functionality
+            setupDragAndDrop();
+            
+            // Hide any previous result messages
+            hideResultMessage();
+        }
+
+        // Load shape matching puzzle
+        function loadShapeMatchingPuzzle(puzzle, puzzleArea) {
+            const shapes = puzzle.shapes;
+            
+            // Create drop zones
+            const dropZoneWidth = 100;
+            const dropZoneHeight = 100;
+            const dropZoneTop = 30;
+            
+            shapes.forEach((shape, index) => {
+                const xPos = 50 + (index * 150);
+                
+                // Create drop zone
+                const dropZone = document.createElement('div');
+                dropZone.className = 'drop-zone';
+                dropZone.style.width = `${dropZoneWidth}px`;
+                dropZone.style.height = `${dropZoneHeight}px`;
+                dropZone.style.left = `${xPos}px`;
+                dropZone.style.top = `${dropZoneTop}px`;
+                dropZone.dataset.type = shape.type;
+                
+                // Add shape outline to drop zone
+                switch (shape.type) {
+                    case 'circle':
+                        dropZone.style.borderRadius = '50%';
+                        break;
+                    case 'square':
+                        // Square by default
+                        break;
+                    case 'triangle':
+                        dropZone.style.borderRadius = '0';
+                        // Use border to create triangle outline
+                        dropZone.style.background = 'transparent';
+                        dropZone.style.borderBottom = '2px dashed #ccc';
+                        dropZone.style.borderLeft = '2px dashed #ccc';
+                        dropZone.style.borderRight = '2px dashed #ccc';
+                        dropZone.style.height = '0';
+                        dropZone.style.width = '0';
+                        dropZone.style.borderWidth = '0 50px 86px 50px';
+                        dropZone.style.borderColor = 'transparent transparent #ccc transparent';
+                        break;
+                }
+                
+                puzzleArea.appendChild(dropZone);
+                
+                // Create draggable shape
+                const draggable = document.createElement('div');
+                draggable.className = 'draggable';
+                draggable.style.width = `${dropZoneWidth}px`;
+                draggable.style.height = `${dropZoneHeight}px`;
+                draggable.style.backgroundColor = shape.color;
+                draggable.style.left = `${Math.random() * (puzzleArea.offsetWidth - dropZoneWidth)}px`;
+                draggable.style.top = `${150 + Math.random() * (puzzleArea.offsetHeight - dropZoneHeight - 150)}px`;
+                draggable.dataset.type = shape.type;
+                
+                // Style based on shape
+                switch (shape.type) {
+                    case 'circle':
+                        draggable.style.borderRadius = '50%';
+                        break;
+                    case 'square':
+                        // Square by default
+                        break;
+                    case 'triangle':
+                        draggable.style.width = '0';
+                        draggable.style.height = '0';
+                        draggable.style.borderStyle = 'solid';
+                        draggable.style.borderWidth = '0 50px 86px 50px';
+                        draggable.style.borderColor = 'transparent transparent ' + shape.color + ' transparent';
+                        draggable.style.background = 'transparent';
+                        break;
+                }
+                
+                puzzleArea.appendChild(draggable);
+            });
+        }
+
+        // Load number ordering puzzle
+        function loadNumberOrderingPuzzle(puzzle, puzzleArea) {
+            const numbers = puzzle.numbers;
+            const tileSize = 60;
+            
+            // Create drop zones for numbers 1-5
+            for (let i = 0; i < 5; i++) {
+                const dropZone = document.createElement('div');
+                dropZone.className = 'drop-zone';
+                dropZone.style.width = `${tileSize}px`;
+                dropZone.style.height = `${tileSize}px`;
+                dropZone.style.left = `${50 + (i * 70)}px`;
+                dropZone.style.top = '100px';
+                dropZone.dataset.position = i + 1;
+                dropZone.textContent = (i + 1);
+                puzzleArea.appendChild(dropZone);
+            }
+            
+            // Create draggable number tiles
+            numbers.forEach((num, index) => {
+                const draggable = document.createElement('div');
+                draggable.className = 'draggable';
+                draggable.style.width = `${tileSize}px`;
+                draggable.style.height = `${tileSize}px`;
+                draggable.style.backgroundColor = '#f39c12';
+                draggable.style.borderRadius = '5px';
+                draggable.style.left = `${50 + (index * 70)}px`;
+                draggable.style.top = '200px';
+                draggable.style.display = 'flex';
+                draggable.style.justifyContent = 'center';
+                draggable.style.alignItems = 'center';
+                draggable.style.fontSize = '24px';
+                draggable.style.fontWeight = 'bold';
+                draggable.style.color = 'white';
+                draggable.textContent = num;
+                draggable.dataset.value = num;
+                puzzleArea.appendChild(draggable);
+            });
+        }
+
+        // Load color matching puzzle
+        function loadColorMatchingPuzzle(puzzle, puzzleArea) {
+            const colors = puzzle.colors;
+            const tileSize = 80;
+            
+            // Create color name drop zones
+            colors.forEach((color, index) => {
+                const dropZone = document.createElement('div');
+                dropZone.className = 'drop-zone';
+                dropZone.style.width = `${tileSize}px`;
+                dropZone.style.height = `${tileSize}px`;
+                dropZone.style.left = `${50 + (index * 100)}px`;
+                dropZone.style.top = '50px';
+                dropZone.textContent = color.name;
+                dropZone.dataset.color = color.name.toLowerCase();
+                puzzleArea.appendChild(dropZone);
+            });
+            
+            // Create draggable color squares
+            const shuffledColors = [...colors].sort(() => Math.random() - 0.5);
+            shuffledColors.forEach((color, index) => {
+                const draggable = document.createElement('div');
+                draggable.className = 'draggable';
+                draggable.style.width = `${tileSize}px`;
+                draggable.style.height = `${tileSize}px`;
+                draggable.style.backgroundColor = color.hex;
+                draggable.style.left = `${50 + (index * 100)}px`;
+                draggable.style.top = '180px';
+                draggable.dataset.color = color.name.toLowerCase();
+                puzzleArea.appendChild(draggable);
+            });
+        }
+
+        // Load image pieces puzzle
+        function loadImagePiecesPuzzle(puzzle, puzzleArea) {
+            const pieces = puzzle.pieces;
+            const pieceSize = 80;
+            
+            // Create image placeholder
+            const imagePlaceholder = document.createElement('div');
+            imagePlaceholder.style.width = `${pieceSize * 2}px`;
+            imagePlaceholder.style.height = `${pieceSize * 2}px`;
+            imagePlaceholder.style.border = '2px dashed #ccc';
+            imagePlaceholder.style.position = 'absolute';
+            imagePlaceholder.style.left = '50%';
+            imagePlaceholder.style.top = '50px';
+            imagePlaceholder.style.transform = 'translateX(-50%)';
+            imagePlaceholder.style.display = 'grid';
+            imagePlaceholder.style.gridTemplateColumns = 'repeat(2, 1fr)';
+            imagePlaceholder.style.gridTemplateRows = 'repeat(2, 1fr)';
+            puzzleArea.appendChild(imagePlaceholder);
+            
+            // Create drop zones for each piece
+            const positions = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
+            positions.forEach((pos, index) => {
+                const dropZone = document.createElement('div');
+                dropZone.className = 'drop-zone';
+                dropZone.style.width = `${pieceSize}px`;
+                dropZone.style.height = `${pieceSize}px`;
+                dropZone.style.position = 'relative';
+                dropZone.style.borderRadius = '0';
+                dropZone.dataset.position = pos;
+                imagePlaceholder.appendChild(dropZone);
+            });
+            
+            // Create draggable pieces
+            const colors = ['#e74c3c', '#3498db', '#2ecc71', '#f1c40f'];
+            const shuffledPositions = [...positions].sort(() => Math.random() - 0.5);
+            
+            shuffledPositions.forEach((pos, index) => {
+                const draggable = document.createElement('div');
+                draggable.className = 'draggable';
+                draggable.style.width = `${pieceSize}px`;
+                draggable.style.height = `${pieceSize}px`;
+                draggable.style.backgroundColor = colors[index];
+                draggable.style.left = `${50 + (index * 100)}px`;
+                draggable.style.top = '200px';
+                draggable.dataset.position = pos;
+                
+                // Add a symbol to identify the piece
+                draggable.style.display = 'flex';
+                draggable.style.justifyContent = 'center';
+                draggable.style.alignItems = 'center';
+                draggable.style.fontSize = '24px';
+                draggable.style.fontWeight = 'bold';
+                draggable.style.color = 'white';
+                
+                const symbols = {
+                    'top-left': '↖',
+                    'top-right': '↗',
+                    'bottom-left': '↙',
+                    'bottom-right': '↘'
+                };
+                
+                draggable.textContent = symbols[pos];
+                puzzleArea.appendChild(draggable);
+            });
+        }
+
+        // Load word scramble puzzle
+        function loadWordScramblePuzzle(puzzle, puzzleArea) {
+            const letters = puzzle.scrambled;
+            const letterSize = 50;
+            
+            // Create letter drop zones
+            for (let i = 0; i < puzzle.word.length; i++) {
+                const dropZone = document.createElement('div');
+                dropZone.className = 'drop-zone';
+                dropZone.style.width = `${letterSize}px`;
+                dropZone.style.height = `${letterSize}px`;
+                dropZone.style.left = `${50 + (i * 60)}px`;
+                dropZone.style.top = '80px';
+                dropZone.dataset.position = i;
+                dropZone.dataset.letter = puzzle.word[i];
+                puzzleArea.appendChild(dropZone);
+            }
+            
+            // Create draggable letters
+            letters.forEach((letter, index) => {
+                const draggable = document.createElement('div');
+                draggable.className = 'draggable';
+                draggable.style.width = `${letterSize}px`;
+                draggable.style.height = `${letterSize}px`;
+                draggable.style.backgroundColor = '#9b59b6';
+                draggable.style.borderRadius = '5px';
+                draggable.style.left = `${50 + (index * 60)}px`;
+                draggable.style.top = '180px';
+                draggable.style.display = 'flex';
+                draggable.style.justifyContent = 'center';
+                draggable.style.alignItems = 'center';
+                draggable.style.fontSize = '24px';
+                draggable.style.fontWeight = 'bold';
+                draggable.style.color = 'white';
+                draggable.textContent = letter;
+                draggable.dataset.letter = letter;
+                puzzleArea.appendChild(draggable);
+            });
+        }
+
+        // Setup drag and drop functionality
+        function setupDragAndDrop() {
+            const draggables = document.querySelectorAll('.draggable');
+            const puzzleArea = document.getElementById('puzzle-area');
+            
+            let activeDraggable = null;
+            let offsetX = 0;
+            let offsetY = 0;
+            
+            // Track mouse movements for bot detection
+            puzzleArea.addEventListener('mousemove', function(e) {
+                // Record mouse position and timestamp
+                mouseMovements.push({
+                    x: e.clientX,
+                    y: e.clientY,
+                    time: Date.now()
+                });
+                
+                // Create a cursor trail effect
+                if (mouseMovements.length % 5 === 0) {  // Only create every 5th movement to avoid too many elements
+                    const trail = document.createElement('div');
+                    trail.className = 'cursor-trail';
+                    trail.style.left = `${e.clientX - puzzleArea.getBoundingClientRect().left}px`;
+                    trail.style.top = `${e.clientY - puzzleArea.getBoundingClientRect().top}px`;
+                    puzzleArea.appendChild(trail);
+                    
+                    // Remove trail after animation
+                    setTimeout(() => {
+                        if (trail.parentNode === puzzleArea) {
+                            puzzleArea.removeChild(trail);
+                        }
+                    }, 500);
+                }
+            });
+            
+            // Handle mousedown on draggable items
+            draggables.forEach(draggable => {
+                draggable.addEventListener('mousedown', function(e) {
+                    e.preventDefault();
+                    activeDraggable = this;
+                    
+                    // Bring to front
+                    this.style.zIndex = 100;
+                    
+                    // Calculate the offset
+                    const rect = this.getBoundingClientRect();
+                    offsetX = e.clientX - rect.left;
+                    offsetY = e.clientY - rect.top;
+                    
+                    // Add active class
+                    this.classList.add('active');
+                });
+            });
+            
+            // Handle mousemove for dragging
+            document.addEventListener('mousemove', function(e) {
+                if (activeDraggable) {
+                    const puzzleRect = puzzleArea.getBoundingClientRect();
+                    const x = e.clientX - puzzleRect.left - offsetX;
+                    const y = e.clientY - puzzleRect.top - offsetY;
+                    
+                    // Keep within bounds
+                    const maxX = puzzleRect.width - activeDraggable.offsetWidth;
+                    const maxY = puzzleRect.height - activeDraggable.offsetHeight;
+                    
+                    activeDraggable.style.left = `${Math.max(0, Math.min(x, maxX))}px`;
+                    activeDraggable.style.top = `${Math.max(0, Math.min(y, maxY))}px`;
+                }
+            });
+            
+            // Handle mouseup to drop the item
+            document.addEventListener('mouseup', function() {
+                if (activeDraggable) {
+                    // Check if it's dropped on a matching drop zone
+                    const dropZones = document.querySelectorAll('.drop-zone');
+                    let matched = false;
+                    
+                    dropZones.forEach(dropZone => {
+                        const dropRect = dropZone.getBoundingClientRect();
+                        const dragRect = activeDraggable.getBoundingClientRect();
+                        
+                        // Check if centers are close enough
+                        const dragCenterX = dragRect.left + dragRect.width / 2;
+                        const dragCenterY = dragRect.top + dragRect.height / 2;
+                        
+                        if (dragCenterX >= dropRect.left && 
+                            dragCenterX <= dropRect.right &&
+                            dragCenterY >= dropRect.top && 
+                            dragCenterY <= dropRect.bottom) {
+                            
+                            // Check if it's the correct match
+                            let isCorrectMatch = false;
+                            
+                            // Different matching logic for different puzzle types
+                            const currentPuzzleType = puzzles[currentPuzzle].type;
+                            
+                            switch (currentPuzzleType) {
+                                case 'shape-matching':
+                                    isCorrectMatch = activeDraggable.dataset.type === dropZone.dataset.type;
+                                    break;
+                                case 'number-ordering':
+                                    isCorrectMatch = parseInt(activeDraggable.dataset.value) === parseInt(dropZone.dataset.position);
+                                    break;
+                                case 'color-matching':
+                                    isCorrectMatch = activeDraggable.dataset.color === dropZone.dataset.color;
+                                    break;
+                                case 'image-pieces':
+                                    isCorrectMatch = activeDraggable.dataset.position === dropZone.dataset.position;
+                                    break;
+                                case 'word-scramble':
+                                    isCorrectMatch = activeDraggable.dataset.letter === dropZone.dataset.letter;
+                                    break;
+                            }
+                            
+                            if (isCorrectMatch) {
+                                // Snap to the drop zone
+                                activeDraggable.style.left = `${dropZone.offsetLeft}px`;
+                                activeDraggable.style.top = `${dropZone.offsetTop}px`;
+                                
+                                // Mark as matched
+                                dropZone.classList.add('item-matched');
+                                activeDraggable.dataset.matched = 'true';
+                                matched = true;
+                            }
+                        }
+                    });
+                    
+                    // Reset z-index and active class
+                    activeDraggable.style.zIndex = 10;
+                    activeDraggable.classList.remove('active');
+                    activeDraggable = null;
+                    
+                    // Check if all items are matched
+                    checkPuzzleCompletion();
+                }
+            });
+        }
+
+        // Check if all items are correctly matched
+        function checkPuzzleCompletion() {
+            const draggables = document.querySelectorAll('.draggable');
+            let allMatched = true;
+            
+            draggables.forEach(draggable => {
+                if (draggable.dataset.matched !== 'true') {
+                    allMatched = false;
+                }
+            });
+            
+            if (allMatched) {
+                correctSolution = true;
+                // Continue with the checkPuzzeCompletion function
+            if (allMatched) {
+                correctSolution = true;
+                // Automatically submit when all pieces are matched
+                setTimeout(() => {
+                    validateSolution();
+                }, 500);
+            }
+        }
+    }
+
+        // Show result message with appropriate styling
+        function showResultMessage(message, type) {
+            const resultElement = document.getElementById('result-message');
+            resultElement.textContent = message;
+            resultElement.className = 'result-message ' + type;
+            resultElement.style.display = 'block';
+        }
+
+        // Hide result message
+        function hideResultMessage() {
+            document.getElementById('result-message').style.display = 'none';
+        }
+
+        // Analyze user behavior for bot detection
+        function analyzeUserBehavior() {
+            // Calculate time taken
+            const timeElapsed = (Date.now() - startTime) / 1000;
+            
+            // Flag for bot detection
+            let isBotLike = false;
+            let detectionReason = "";
+            
+            // Check if completed too quickly
+            if (timeElapsed < 1.5) {
+                isBotLike = true;
+                detectionReason = "Solution speed too fast (completed in " + timeElapsed.toFixed(1) + " seconds)";
+            }
+            
+            // Analyze mouse movement patterns
+            if (mouseMovements.length > 0) {
+                // Check for uniform movement speed (bot-like behavior)
+                let uniformMovementCount = 0;
+                let previousDistance = -1;
+                let previousTime = -1;
+                
+                for (let i = 1; i < mouseMovements.length; i++) {
+                    const current = mouseMovements[i];
+                    const previous = mouseMovements[i-1];
+                    
+                    // Calculate distance and time
+                    const dx = current.x - previous.x;
+                    const dy = current.y - previous.y;
+                    const distance = Math.sqrt(dx*dx + dy*dy);
+                    const timeDiff = current.time - previous.time;
+                    
+                    // Skip if no movement
+                    if (distance === 0) continue;
+                    
+                    // Check if movement speed is very consistent
+                    const speed = distance / timeDiff;
+                    
+                    if (previousDistance > 0) {
+                        const speedRatio = speed / previousDistance;
+                        if (speedRatio > 0.95 && speedRatio < 1.05) {
+                            uniformMovementCount++;
+                        }
+                    }
+                    
+                    previousDistance = speed;
+                    previousTime = timeDiff;
+                }
+                
+                // If more than 80% of movements are uniform, probably a bot
+                const uniformRatio = uniformMovementCount / (mouseMovements.length - 1);
+                if (uniformRatio > 0.8 && mouseMovements.length > 10) {
+                    isBotLike = true;
+                    detectionReason = "Unusually uniform mouse movements detected";
+                }
+                
+                // Check if movement is too straight (bot-like)
+                let straightLineCount = 0;
+                let previousAngle = null;
+                
+                for (let i = 2; i < mouseMovements.length; i++) {
+                    const p1 = mouseMovements[i-2];
+                    const p2 = mouseMovements[i-1];
+                    const p3 = mouseMovements[i];
+                    
+                    // Calculate angles between points
+                    const angle1 = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+                    const angle2 = Math.atan2(p3.y - p2.y, p3.x - p2.x);
+                    
+                    // Compare angles (should be different for human movement)
+                    const angleDiff = Math.abs(angle1 - angle2);
+                    if (angleDiff < 0.1) { // Very small angle change
+                        straightLineCount++;
+                    }
+                }
+                
+                // If more than 70% of movements are in straight lines, probably a bot
+                const straightRatio = straightLineCount / (mouseMovements.length - 2);
+                if (straightRatio > 0.7 && mouseMovements.length > 10) {
+                    isBotLike = true;
+                    detectionReason = "Suspiciously precise movements detected";
+                }
+            } else {
+                // No mouse movements tracked (could be a script)
+                isBotLike = true;
+                detectionReason = "No natural mouse movements detected";
+            }
+            
+            return {
+                isBotLike: isBotLike,
+                timeElapsed: timeElapsed,
+                reason: detectionReason
+            };
+        }
+
+        // Validate the solution
+        function validateSolution() {
+            // Stop the timer
+            clearInterval(timerInterval);
+            
+            // Check if the solution is correct
+            if (!correctSolution) {
+                showResultMessage("Puzzle not solved correctly. Please try again.", "error");
+                return;
+            }
+            
+            // Analyze user behavior for bot detection
+            const analysis = analyzeUserBehavior();
+            
+            if (analysis.isBotLike) {
+                showResultMessage("Bot detected: " + analysis.reason, "error");
+                setTimeout(() => {
+                    // Offer a simpler puzzle after failure
+                    currentPuzzle = (currentPuzzle + 1) % puzzles.length;
+                    loadPuzzle(currentPuzzle);
+                    startTime = Date.now();
+                    timerInterval = setInterval(updateTimer, 100);
+                    mouseMovements = [];
+                    correctSolution = false;
+                }, 3000);
+            } else {
+                showResultMessage("Success! Redirecting to " + targetPage + "...", "success");
+                setTimeout(() => {
+                    // In a real application, this would redirect to the target page
+                    alert("CAPTCHA passed successfully! You would now be redirected to: " + targetPage);
+                    // Return to the main page
+                    document.querySelector('.content-area').style.display = 'block';
+                    document.getElementById('captcha-screen').style.display = 'none';
+                }, 2000);
+            }
+        }
+
+        // Simulate bot solving the puzzle
+        function simulateBot() {
+            // Show loading animation
+            document.getElementById('loading').style.display = 'block';
+            
+            // Clear previous mouse movements
+            mouseMovements = [];
+            
+            // Generate fake bot-like mouse movements (too uniform)
+            const startX = 100;
+            const startY = 100;
+            const puzzleArea = document.getElementById('puzzle-area');
+            
+            // Simulate mouse movements
+            for (let i = 0; i < 20; i++) {
+                // Generate linear path (too perfect to be human)
+                mouseMovements.push({
+                    x: startX + (i * 10),
+                    y: startY + (i * 5),
+                    time: Date.now() + (i * 50) // Uniform time intervals
+                });
+                
+                // Add visual trails
+                if (i % 2 === 0) {
+                    const trail = document.createElement('div');
+                    trail.className = 'cursor-trail';
+                    trail.style.left = `${startX + (i * 10) - puzzleArea.getBoundingClientRect().left}px`;
+                    trail.style.top = `${startY + (i * 5) - puzzleArea.getBoundingClientRect().top}px`;
+                    puzzleArea.appendChild(trail);
+                    
+                    setTimeout(() => {
+                        if (trail.parentNode === puzzleArea) {
+                            puzzleArea.removeChild(trail);
+                        }
+                    }, 1000);
+                }
+            }
+            
+            // Simulate solving the puzzle very quickly
+            setTimeout(() => {
+                // Get all draggables and drop zones
+                const draggables = document.querySelectorAll('.draggable');
+                const dropZones = document.querySelectorAll('.drop-zone');
+                
+                // Match them correctly but very quickly
+                draggables.forEach((draggable, index) => {
+                    // Find the correct drop zone based on the puzzle type
+                    let matchingDropZone = null;
+                    const currentPuzzleType = puzzles[currentPuzzle].type;
+                    
+                    switch (currentPuzzleType) {
+                        case 'shape-matching':
+                            const shapeType = draggable.dataset.type;
+                            matchingDropZone = Array.from(dropZones).find(zone => 
+                                zone.dataset.type === shapeType);
+                            break;
+                        case 'number-ordering':
+                            const numberValue = draggable.dataset.value;
+                            matchingDropZone = Array.from(dropZones).find(zone => 
+                                parseInt(zone.dataset.position) === parseInt(numberValue));
+                            break;
+                        case 'color-matching':
+                            const colorName = draggable.dataset.color;
+                            matchingDropZone = Array.from(dropZones).find(zone => 
+                                zone.dataset.color === colorName);
+                            break;
+                        case 'image-pieces':
+                            const position = draggable.dataset.position;
+                            matchingDropZone = Array.from(dropZones).find(zone => 
+                                zone.dataset.position === position);
+                            break;
+                        case 'word-scramble':
+                            const letter = draggable.dataset.letter;
+                            matchingDropZone = Array.from(dropZones).find(zone => 
+                                zone.dataset.letter === letter && !zone.classList.contains('item-matched'));
+                            break;
+                    }
+                    
+                    if (matchingDropZone) {
+                        // Place the draggable directly on the drop zone
+                        draggable.style.left = `${matchingDropZone.offsetLeft}px`;
+                        draggable.style.top = `${matchingDropZone.offsetTop}px`;
+                        matchingDropZone.classList.add('item-matched');
+                        draggable.dataset.matched = 'true';
+                    }
+                });
+                
+                // Hide loading animation
+                document.getElementById('loading').style.display = 'none';
+                
+                // Set correctSolution to true since the bot solved it "correctly"
+                correctSolution = true;
+                
+                // Reduce the time (bot solves too fast)
+                startTime = Date.now() - 1000; // Only 1 second elapsed
+                
+                // Run validation which will detect bot-like behavior
+                setTimeout(() => {
+                    validateSolution();
+                }, 500);
+            }, 1500);
+        }
+
+        // Event listeners for buttons
+        document.getElementById('submit-btn').addEventListener('click', validateSolution);
+        
+        document.getElementById('switch-puzzle-btn').addEventListener('click', function() {
+            // Switch to the next puzzle
+            currentPuzzle = (currentPuzzle + 1) % puzzles.length;
+            loadPuzzle(currentPuzzle);
+            
+            // Reset timer and tracking
+            clearInterval(timerInterval);
+            startTime = Date.now();
+            timerInterval = setInterval(updateTimer, 100);
+            mouseMovements = [];
+            correctSolution = false;
+        });
+        
+        document.getElementById('simulate-bot-btn').addEventListener('click', simulateBot);
+        
+        document.getElementById('retry-btn').addEventListener('click', function() {
+            // Reload the same puzzle
+            loadPuzzle(currentPuzzle);
+            
+            // Reset timer and tracking
+            clearInterval(timerInterval);
+            startTime = Date.now();
+            timerInterval = setInterval(updateTimer, 100);
+            mouseMovements = [];
+            correctSolution = false;
+        });
+    </script>
+</body>
+</html>
